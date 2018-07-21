@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login</title>
+    <link rel="stylesheet" href="static/css/styles.css">
+    <script src="static/js/scripts.js"></script>
+</head>
+<body>
+    <div class="form-container">
+        <div class="greeting">
+            <h2>Sign in!</h2>
+        </div>
+        <form action="#" class="inputs-container">
+    
+            <div class="input">
+                <input id="login" type="text" class="input" name="login" placeholder="Your login" onkeyup="switchVisibility()">
+                <p id="error"></p>
+            </div>
+            <div class="input">
+                <input id="pass" type="password" class="input" name="pass" placeholder="Your password" onkeyup="switchVisibility()">
+                <p id="error"></p>
+            </div>
+            <input id="submit" type="submit" class="login-button" name="submit" value="Sign in" disabled >
+        </form>        
+    </div>
+
+</body>
+</html>
