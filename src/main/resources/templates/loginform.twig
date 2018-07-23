@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login</title>
+    <link rel="stylesheet" href="static/css/styles.css">
+    <script src="static/js/scripts.js"></script>
+</head>
+<body>
+    <div class="form-container">
+
+        <!--<h1>This page was visit {{counter}} times</h1>
+        {{isNewSession}} sesionId {{sessionId}}-->
+        <h1>Sign in!</h1>
+
+        <form action="loginform" method="POST">
+
+            <input id="login" type="login" class="input" name="login" placeholder="Your login" onkeyup="switchVisibility()">
+            <p id="error-login"></p>
+
+            <input id="pass" type="password" class="input" name="pass" placeholder="Your password" onkeyup="switchVisibility()">
+            <p id="error-pass"></p>
+
+            <input id="submit" type="submit" class="login-button" name="submit" value="Sign in" disabled >
+            {% if error==true %}
+                <p id="error">LOGIN FAILED<br>Try again!</p>
+            {% endif %}
+        </form>        
+    </div>
+
+</body>
+</html>

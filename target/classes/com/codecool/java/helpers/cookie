@@ -1,0 +1,23 @@
+counter++;
+
+        String cookieStr = httpExchange.getRequestHeaders().getFirst("Cookie");
+        HttpCookie cookie = null;
+        boolean isNewSession = false;
+
+        if (cookieStr != null) {
+
+            List<HttpCookie> cookieList = HttpCookie.parse(cookieStr);
+            for (HttpCookie c : cookieList) {
+                if ( c.getName().equals("sessionId")) {
+                    cookie = c;
+                }
+            }
+
+            //isNewSession = false;
+        }
+        if (cookie == null){
+            cookie = new HttpCookie("sessionId", String.valueOf(counter));
+            isNewSession = true;
+            httpExchange.getResponseHeaders().add("Set-Cookie", cookie.toString());
+
+        }

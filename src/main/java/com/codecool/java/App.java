@@ -12,7 +12,9 @@ public class App {
         HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
 
         server.createContext("/loginform", new LoginForm());
+        server.createContext("/profile", new Profile());
         server.createContext("/static", new Static());
+        server.createContext("/logout", new Logout());
         server.setExecutor(null); // creates a default executor
 
         // start listening

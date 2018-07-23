@@ -4,34 +4,39 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.jtwig.JtwigModel;
 import org.jtwig.JtwigTemplate;
+import sun.security.provider.MD5;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.*;
+import java.net.HttpCookie;
 import java.net.URLDecoder;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.security.MessageDigest;
 
 
 public class LoginForm implements HttpHandler {
-
-    private DBloginForm loginformDB;
+    private UserDAO userDao;
+    int counter = 0;
 
     public LoginForm() {
-
-        loginformDB = new DBloginForm();
+        userDao = new UserDAO();
     }
 
     public void handle(HttpExchange httpExchange) throws IOException {
+
         String method = httpExchange.getRequestMethod();
-        //Map<String, String> dbpairs = loginformDB.getPairs();
-        String response = "";
+        String response="";
+        boolean error = false;
 
         if (method.equals("GET")) {
-
-            JtwigTemplate template = JtwigTemplate.classpathTemplate("templates/loginForm.twig");
+            JtwigTemplate template = JtwigTemplate.classpathTemplate("templates/loginform.twig");
             JtwigModel model = JtwigModel.newModel();
-            model.with("pairs", loginformDB.getPairs() );
-
+            model.with("counter", counter);
+//            model.with("isNewSession", isNewSession);
+//            model.with("sessionId", cookie.getValue());
             response = template.render(model);
         }
 
@@ -41,25 +46,78 @@ public class LoginForm implements HttpHandler {
             BufferedReader br = new BufferedReader(isr);
             String formData = br.readLine();
 
-            System.out.println(formData);
-
+            //String sessionId;
             Map inputs = parseFormData(formData);
 
             String login = inputs.get("login").toString();
-            String password = inputs.get("pass").toString();
+            String pass = inputs.get("pass").toString();
+            String password = hashedPass(pass);
+            //System.out.println(password);
 
 
-            JtwigTemplate template = JtwigTemplate.classpathTemplate("templates/gbook.twig");
+            User loggedUser = userDao.getUserByCredentials(login, password);
+            //User loggedUser = loginformDB.getUserByCredentials(login, password);
+
+            if (loggedUser == null) {
+                error = true;
+
+            } else {
+                String sessionId = generateSessionId();
+
+                HttpCookie cookie = new HttpCookie("sessionId", sessionId);
+                httpExchange.getResponseHeaders().add("Set-Cookie", cookie.toString());
+                Session.data.put(sessionId, loggedUser);
+
+
+                switch (loggedUser.getRole()) {
+                    case "admin":
+                        httpRedirectTo("/profile", httpExchange);
+                        break;
+                    case "mentor":
+                        httpRedirectTo("/profile", httpExchange);
+                        break;
+                    case "student":
+                        httpRedirectTo("/profile", httpExchange);
+                        break;
+                }
+
+            }
+            JtwigTemplate template = JtwigTemplate.classpathTemplate("templates/loginform.twig");
             JtwigModel model = JtwigModel.newModel();
-            model.with("messageList", loginformDB.getPairs());
+            model.with("error", error);
+
+            //model.with("isNewSession", isNewSession);
+            //model.with("sessionId", cookie.getValue());
 
             response = template.render(model);
         }
-
+        //response = template.render(model);
         httpExchange.sendResponseHeaders(200, response.length());
         OutputStream os = httpExchange.getResponseBody();
         os.write(response.getBytes());
         os.close();
+    }
+
+    private String hashedPass(String pass) {
+        String hashPass = "";
+        try {
+
+            MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+            messageDigest.update(pass.getBytes());
+            byte[] digest = messageDigest.digest();
+            hashPass = DatatypeConverter.printHexBinary(digest).toLowerCase();
+
+
+        } catch (NoSuchAlgorithmException e) {
+            System.out.println("błąd algorytmu");
+        }
+        return hashPass;
+    }
+
+    private String generateSessionId(){
+        Random generator = new Random();
+        String sessionId = Integer.toString((generator.nextInt()));
+        return sessionId;
     }
 
     private static Map<String, String> parseFormData(String formData) throws UnsupportedEncodingException {
@@ -73,11 +131,12 @@ public class LoginForm implements HttpHandler {
         return map;
     }
 
-    private boolean isValid(String login, String pass) {
-
-        if (loginformDB.getPairs().get(login).equals(pass)){
-            return true;
-        } else return false;
+    private void httpRedirectTo(String dest, HttpExchange httpExchange) throws IOException {
+        String hostPort = httpExchange.getRequestHeaders().get("host").get(0);
+        httpExchange.getResponseHeaders().set("Location", "http://" + hostPort + dest);
+        httpExchange.sendResponseHeaders(301, -1);
     }
+
+
 
 }
